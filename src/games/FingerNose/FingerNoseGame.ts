@@ -1,6 +1,11 @@
 import p5 from "p5";
 import { BaseMiniGame } from "../../types/MiniGame";
 
+// Importation directe des images - Vite les transforme automatiquement en URLs
+import fingerImg from "./assets/finger.png";
+import noseImg from "./assets/nose.png";
+import faceImg from "./assets/face.png";
+
 export class FingerNoseGame extends BaseMiniGame {
   private fingerX: number = 0;
   private fingerY: number = 0;
@@ -11,8 +16,12 @@ export class FingerNoseGame extends BaseMiniGame {
   private faceImg: p5.Image | null = null;
   private successSound: any = null;
   private completed: boolean = false;
-  private noseHitbox: { x: number, y: number, radius: number } = { x: 0, y: 0, radius: 20 };
-  private fingerTipOffset: { x: number, y: number } = { x: 0, y: 0 };
+  private noseHitbox: { x: number; y: number; radius: number } = {
+    x: 0,
+    y: 0,
+    radius: 20,
+  };
+  private fingerTipOffset: { x: number; y: number } = { x: 0, y: 0 };
 
   constructor(p: p5) {
     super(p);
@@ -20,29 +29,41 @@ export class FingerNoseGame extends BaseMiniGame {
   }
 
   private loadAssets(): void {
-    // Ajoute cet affichage pour vérifier si la méthode est appelée
     console.log("FingerNoseGame: tentative de chargement des assets...");
 
-    this.p.loadImage('./games/FingerNose/assets/finger.png', (img) => {
-      console.log("FingerNoseGame: finger.png chargé avec succès!");
-      this.fingerImg = img;
-      this.fingerTipOffset = { x: img.width / 2, y: 10 };
-    }, () => {
-      console.error("FingerNoseGame: ÉCHEC chargement de finger.png");
-    });
+    // Utilise les URLs importées directement
+    this.p.loadImage(
+      fingerImg,
+      (img) => {
+        console.log("FingerNoseGame: finger.png chargé avec succès!");
+        this.fingerImg = img;
+        this.fingerTipOffset = { x: img.width / 2, y: 10 };
+      },
+      () => {
+        console.error("FingerNoseGame: ÉCHEC chargement de finger.png");
+      }
+    );
 
-    this.p.loadImage('./games/FingerNose/assets/nose.png', (img) => {
-      console.log("FingerNoseGame: nose.png chargé avec succès!");
-      this.noseImg = img;
-    }, () => {
-      console.error("FingerNoseGame: ÉCHEC chargement de nose.png");
-    });
+    this.p.loadImage(
+      noseImg,
+      (img) => {
+        console.log("FingerNoseGame: nose.png chargé avec succès!");
+        this.noseImg = img;
+      },
+      () => {
+        console.error("FingerNoseGame: ÉCHEC chargement de nose.png");
+      }
+    );
 
-    this.p.loadImage('./games/FingerNose/assets/face.png', (img) => {
-      this.faceImg = img;
-    }, () => {
-      // C'est OK si la face n'existe pas
-    });
+    this.p.loadImage(
+      faceImg,
+      (img) => {
+        this.faceImg = img;
+      },
+      () => {
+        // C'est OK si la face n'existe pas
+      }
+    );
 
     // Si tu utilises p5.sound
     // this.p.loadSound('./games/FingerNose/assets/success.mp3', (sound) => {
@@ -63,7 +84,7 @@ export class FingerNoseGame extends BaseMiniGame {
     this.noseHitbox = {
       x: this.noseX,
       y: this.noseY,
-      radius: 30 // Ajuste selon la taille de ton image
+      radius: 30, // Ajuste selon la taille de ton image
     };
 
     this.completed = false;
@@ -83,7 +104,11 @@ export class FingerNoseGame extends BaseMiniGame {
 
       // Ajout d'un peu de texture
       for (let i = 0; i < 50; i++) {
-        this.p.fill(30 + this.p.random(20), 30 + this.p.random(20), 40 + this.p.random(20));
+        this.p.fill(
+          30 + this.p.random(20),
+          30 + this.p.random(20),
+          40 + this.p.random(20)
+        );
         this.p.noStroke();
         this.p.ellipse(
           this.p.random(this.p.width),
@@ -98,7 +123,13 @@ export class FingerNoseGame extends BaseMiniGame {
       // Centre l'image sur les coordonnées
       const noseWidth = 100;
       const noseHeight = 100;
-      this.p.image(this.noseImg, this.noseX - noseWidth/2, this.noseY - noseHeight/2, noseWidth, noseHeight);
+      this.p.image(
+        this.noseImg,
+        this.noseX - noseWidth / 2,
+        this.noseY - noseHeight / 2,
+        noseWidth,
+        noseHeight
+      );
     } else {
       // Fallback pour le nez (plus sombre pour aller avec le thème noir)
       this.p.fill(150, 50, 50);
@@ -120,14 +151,17 @@ export class FingerNoseGame extends BaseMiniGame {
       this.p.translate(this.fingerX, this.fingerY);
 
       // Calcule l'angle entre le doigt et le nez
-      const angle = this.p.atan2(this.noseY - this.fingerY, this.noseX - this.fingerX);
+      const angle = this.p.atan2(
+        this.noseY - this.fingerY,
+        this.noseX - this.fingerX
+      );
       // Rotation pour que le doigt pointe vers le nez
-      this.p.rotate(angle + this.p.PI/2); // +90° car l'image pointe vers le haut
+      this.p.rotate(angle + this.p.PI / 2); // +90° car l'image pointe vers le haut
 
       // Dessine l'image centrée et au bon endroit
       this.p.image(
         this.fingerImg,
-        -fingerWidth/2,
+        -fingerWidth / 2,
         -this.fingerTipOffset.y,
         fingerWidth,
         fingerHeight
@@ -146,7 +180,12 @@ export class FingerNoseGame extends BaseMiniGame {
     }
 
     // Vérifie si le doigt est dans le nez
-    const distance = this.p.dist(this.fingerX, this.fingerY, this.noseHitbox.x, this.noseHitbox.y);
+    const distance = this.p.dist(
+      this.fingerX,
+      this.fingerY,
+      this.noseHitbox.x,
+      this.noseHitbox.y
+    );
     if (distance < this.noseHitbox.radius) {
       this.completed = true;
       // if (this.successSound) this.successSound.play();
