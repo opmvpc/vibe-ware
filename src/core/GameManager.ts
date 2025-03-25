@@ -1,6 +1,7 @@
 import p5 from "p5";
 import { MiniGame } from "../types/MiniGame";
 import { GameState } from "./GameState";
+import backgroundImg from "../assets/background.jpeg";
 
 export class GameManager {
   private currentGameIndex: number = 0;
@@ -13,9 +14,18 @@ export class GameManager {
   private gameState: GameState = GameState.MENU;
   private debugButtonVisible: boolean = true; // Affiche ou non le bouton de debug
   private previousState: GameState = GameState.MENU; // Pour stocker l'état avant la pause
+  private backgroundImage: p5.Image | null = null;
+  private debugMenuScroll: number = 0;
+  private debugItemHeight: number = 50;
+  private visibleItems: number = 5; // Nombre d'éléments visibles à la fois
+  private isDebugMode: boolean = false; // Nouvelle propriété pour le mode debug
 
   constructor(private p: p5, games: MiniGame[]) {
     this.games = games;
+    // Chargement de l'image de fond
+    this.p.loadImage(backgroundImg, (img) => {
+      this.backgroundImage = img;
+    });
   }
 
   setup(): void {
@@ -50,33 +60,73 @@ export class GameManager {
   }
 
   private drawMenu(): void {
-    // Un écran d'accueil aussi basique que tes compétences
-    this.p.background(40, 40, 60);
+    // Fond avec image ou couleur de secours
+    if (this.backgroundImage) {
+      this.p.image(this.backgroundImage, 0, 0, this.p.width, this.p.height);
 
-    // Titre avec typographie de base, comme ton imagination
+      // Overlay semi-transparent pour mieux voir le texte
+      this.p.fill(20, 20, 30, 180);
+      this.p.rect(0, 0, this.p.width, this.p.height);
+    } else {
+      // Fallback si l'image n'est pas chargée
+      this.p.background(40, 40, 60);
+    }
+
+    // Titre avec effet de lumière
     this.p.fill(255, 50, 50);
-    this.p.textSize(40);
+    this.p.textSize(42);
+    this.p.textStyle(this.p.BOLD);
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
     this.p.text("VIBE-WARE", this.p.width / 2, this.p.height / 3);
 
-    this.p.fill(200);
+    // Effet de halo autour du titre
+    this.p.drawingContext.shadowOffsetX = 0;
+    this.p.drawingContext.shadowOffsetY = 0;
+    this.p.drawingContext.shadowBlur = 15;
+    this.p.drawingContext.shadowColor = "rgba(255, 50, 50, 0.5)";
+
+    // Sous-titre avec style plus léger
+    this.p.drawingContext.shadowBlur = 0;
+    this.p.fill(200, 200, 210);
     this.p.textSize(16);
+    this.p.textStyle(this.p.NORMAL);
     this.p.text(
       "Un jeu si basique que même toi tu peux y jouer",
       this.p.width / 2,
       this.p.height / 3 + 40
     );
 
-    // Bouton start - on va voir si tu arrives à le trouver
-    this.p.fill(60, 220, 60);
-    this.p.rect(this.p.width / 2 - 75, this.p.height / 2 + 40, 150, 50, 10);
+    // Bouton JOUER modernisé avec effet de survol
+    const btnX = this.p.width / 2 - 75;
+    const btnY = this.p.height / 2 + 20;
+    const btnWidth = 150;
+    const btnHeight = 50;
 
+    // Vérifier si la souris est sur le bouton pour l'effet de survol
+    const isHovering = this.isMouseOverButton(btnX, btnY, btnWidth, btnHeight);
+
+    // Fond du bouton avec effet de glassmorphism
+    this.p.drawingContext.shadowBlur = isHovering ? 15 : 8;
+    this.p.drawingContext.shadowColor = "rgba(60, 220, 60, 0.6)";
+
+    // Fond semi-transparent
+    this.p.fill(isHovering ? 'rgba(70, 230, 70, 0.9)' : 'rgba(60, 220, 60, 0.8)');
+
+    // Bordures arrondies et fines
+    this.p.strokeWeight(isHovering ? 2 : 1);
+    this.p.stroke(255, 255, 255, 100);
+    this.p.rect(btnX, btnY, btnWidth, btnHeight, 25); // Coins plus arrondis
+
+    // Texte du bouton
+    this.p.drawingContext.shadowBlur = 0;
     this.p.fill(255);
-    this.p.textSize(24);
-    this.p.text("JOUER", this.p.width / 2, this.p.height / 2 + 65);
+    this.p.noStroke();
+    this.p.textSize(isHovering ? 26 : 24);
+    this.p.textAlign(this.p.CENTER, this.p.CENTER);
+    this.p.text("JOUER", this.p.width / 2, btnY + btnHeight/2);
 
-    // Instructions pour les illettrés comme toi
-    this.p.fill(180);
+    // Instructions avec effet plus subtil
+    this.p.fill(200, 200, 210, 150);
     this.p.textSize(14);
     this.p.text(
       "Mini-jeux rapides • 3 vies • Ne sois pas nul",
@@ -84,25 +134,29 @@ export class GameManager {
       this.p.height / 2 + 120
     );
 
-    // Ajoute un bouton de debug en bas à droite
+    // Redesign du bouton debug pour qu'il soit plus discret mais élégant
     if (this.debugButtonVisible) {
+      const debugBtnX = this.p.width - 75;
+      const debugBtnY = this.p.height - 35;
+      const debugBtnWidth = 65;
+      const debugBtnHeight = 25;
+
+      const isDebugHovering = this.isMouseOverButton(
+        debugBtnX, debugBtnY, debugBtnWidth, debugBtnHeight
+      );
+
+      // Effet de glassmorphism subtil
+      this.p.fill(isDebugHovering ? 'rgba(100, 100, 120, 0.8)' : 'rgba(80, 80, 100, 0.6)');
+      this.p.strokeWeight(1);
+      this.p.stroke(255, 255, 255, 70);
+      this.p.rect(debugBtnX, debugBtnY, debugBtnWidth, debugBtnHeight, 12);
+
+      // Texte du bouton debug
+      this.p.noStroke();
+      this.p.fill(isDebugHovering ? 255 : 220);
       this.p.textSize(12);
-      this.p.textAlign(this.p.RIGHT);
-      this.p.fill(100); // Gris discret
-
-      // Dessine le bouton
-      this.p.rect(this.p.width - 70, this.p.height - 30, 60, 20);
-      this.p.fill(200); // Texte plus clair
-      this.p.text("DEBUG", this.p.width - 40, this.p.height - 18);
-
-      // Vérifie si le bouton est cliqué
-      if (this.p.mouseIsPressed &&
-          this.p.mouseX > this.p.width - 70 &&
-          this.p.mouseX < this.p.width - 10 &&
-          this.p.mouseY > this.p.height - 30 &&
-          this.p.mouseY < this.p.height - 10) {
-        this.enterDebugMode();
-      }
+      this.p.textAlign(this.p.CENTER, this.p.CENTER);
+      this.p.text("DEBUG", debugBtnX + debugBtnWidth/2, debugBtnY + debugBtnHeight/2);
     }
   }
 
@@ -203,44 +257,109 @@ export class GameManager {
 
   // Nouveau mode DEBUG pour les développeurs en herbe comme toi
   private drawDebugMenu(): void {
-    this.p.background(40, 40, 80); // Un fond un peu différent pour ne pas confondre
+    // Fond
+    this.p.background(20, 20, 40);
 
+    // Titre
     this.p.fill(255);
     this.p.textSize(32);
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
-    this.p.text("MODE DEBUG", this.p.width / 2, 40);
+    this.p.text("MODE DEBUG", this.p.width/2, 40);
 
+    // Sous-titre
+    this.p.fill(180, 180, 200);
     this.p.textSize(14);
-    this.p.text("(Pour les développeurs qui ne savent pas ce qu'ils font)", this.p.width / 2, 70);
+    this.p.text("(Pour les développeurs qui ne savent pas ce qu'ils font)",
+               this.p.width/2, 70);
 
-    // Liste des mini-jeux disponibles
-    for (let i = 0; i < this.games.length; i++) {
-      // Calcule la position de chaque bouton de jeu
-      const y = 120 + i * 60;
+    // Conteneur de liste avec glassmorphism
+    const listX = 40;
+    const listY = 100;
+    const listWidth = this.p.width - 80;
+    const listHeight = this.debugItemHeight * this.visibleItems;
 
-      // Dessine le fond du bouton
-      if (this.isMouseOverButton(this.p.width / 2 - 120, y - 20, 240, 40)) {
-        this.p.fill(80, 80, 120); // Highlight quand la souris est dessus
-      } else {
-        this.p.fill(60, 60, 100);
+    // Conteneur principal
+    this.p.fill(60, 60, 100, 100);
+    this.p.stroke(255, 255, 255, 30);
+    this.p.strokeWeight(1);
+    this.p.rect(listX, listY, listWidth, listHeight, 10);
+
+    // Au lieu d'utiliser clip(), on va simplement ne pas dessiner les éléments en dehors du conteneur
+
+    // Calculer le nombre d'éléments total
+    const totalItems = this.games.length + 1; // +1 pour le bouton retour
+
+    // Calculer les limites de défilement
+    const maxScroll = Math.max(0, totalItems - this.visibleItems);
+    this.debugMenuScroll = this.p.constrain(this.debugMenuScroll, 0, maxScroll);
+
+    // Dessiner les éléments visibles avec décalage de scroll
+    for (let i = 0; i < totalItems; i++) {
+      const displayIndex = i - this.debugMenuScroll;
+
+      // Ne dessiner que les éléments visibles
+      if (displayIndex >= 0 && displayIndex < this.visibleItems) {
+        const itemY = listY + displayIndex * this.debugItemHeight;
+
+        // Vérifier si la souris est sur cet élément
+        const isHovering = this.p.mouseY > itemY &&
+                          this.p.mouseY < itemY + this.debugItemHeight &&
+                          this.p.mouseX > listX &&
+                          this.p.mouseX < listX + listWidth;
+
+        // Dessiner le fond de l'élément
+        this.p.fill(isHovering ? 'rgba(80, 80, 120, 0.9)' : 'rgba(60, 60, 100, 0.7)');
+        this.p.noStroke();
+        this.p.rect(listX + 5, itemY + 5, listWidth - 10, this.debugItemHeight - 10, 5);
+
+        // Déterminer le texte à afficher
+        let buttonText = "";
+        if (i < this.games.length) {
+          // Extraire le nom du jeu sans "Game" à la fin
+          buttonText = this.games[i].constructor.name.replace("Game", "");
+        } else {
+          buttonText = "Retour au Menu Principal";
+          // Style différent pour le bouton de retour
+          if (isHovering) {
+            this.p.fill('rgba(200, 60, 60, 0.9)');
+          } else {
+            this.p.fill('rgba(180, 60, 60, 0.7)');
+          }
+          this.p.rect(listX + 5, itemY + 5, listWidth - 10, this.debugItemHeight - 10, 5);
+        }
+
+        // Dessiner le texte
+        this.p.fill(255);
+        this.p.textSize(16);
+        this.p.textAlign(this.p.CENTER, this.p.CENTER);
+        this.p.text(buttonText, listX + listWidth/2, itemY + this.debugItemHeight/2);
       }
-      this.p.rect(this.p.width / 2 - 120, y - 20, 240, 40, 5);
-
-      // Texte du mini-jeu
-      this.p.fill(255);
-      this.p.textSize(18);
-      this.p.textAlign(this.p.CENTER, this.p.CENTER);
-
-      // Nom du jeu (on extrait le nom de la classe)
-      const gameName = this.games[i].constructor.name.replace('Game', '');
-      this.p.text(gameName, this.p.width / 2, y);
     }
 
-    // Bouton pour revenir au menu principal
-    this.p.fill(200, 60, 60);
-    this.p.rect(this.p.width / 2 - 100, this.p.height - 60, 200, 40, 5);
-    this.p.fill(255);
-    this.p.text("Retour au Menu Principal", this.p.width / 2, this.p.height - 40);
+    // Pas besoin de réinitialiser le clipping puisqu'on ne l'utilise plus
+
+    // Flèches de défilement
+    if (this.debugMenuScroll > 0) {
+      // Flèche vers le haut
+      this.drawScrollArrow(listX + listWidth/2, listY - 20, true);
+    }
+
+    if (this.debugMenuScroll < maxScroll) {
+      // Flèche vers le bas
+      this.drawScrollArrow(listX + listWidth/2, listY + listHeight + 20, false);
+    }
+  }
+
+  private drawScrollArrow(x: number, y: number, pointingUp: boolean): void {
+    this.p.push();
+    this.p.translate(x, y);
+    if (!pointingUp) this.p.rotate(this.p.PI);
+
+    this.p.fill(200, 200, 220);
+    this.p.noStroke();
+    this.p.triangle(-10, 5, 10, 5, 0, -10);
+
+    this.p.pop();
   }
 
   private drawDebugGame(): void {
@@ -304,59 +423,110 @@ export class GameManager {
 
   // Dessine le bouton de pause en bas à gauche
   private drawPauseButton(): void {
-    // Carré gris semi-transparent
-    this.p.fill(100, 100, 100, 180);
-    this.p.rect(10, this.p.height - 40, 30, 30, 5);
+    // Position du bouton en bas à gauche
+    const btnX = 15;
+    const btnY = this.p.height - 45;
+    const btnSize = 30;
+
+    const isHovering = this.isMouseOverButton(btnX, btnY, btnSize, btnSize);
+
+    // Effet glassmorphism pour le bouton
+    this.p.drawingContext.shadowBlur = isHovering ? 10 : 5;
+    this.p.drawingContext.shadowColor = "rgba(0, 0, 0, 0.5)";
+
+    this.p.fill(isHovering ? 'rgba(100, 100, 100, 0.9)' : 'rgba(80, 80, 80, 0.7)');
+    this.p.stroke(255, 255, 255, isHovering ? 80 : 40);
+    this.p.strokeWeight(1);
+    this.p.rect(btnX, btnY, btnSize, btnSize, 8);
 
     // Icône de pause (deux barres verticales)
-    this.p.fill(240);
-    this.p.rect(18, this.p.height - 32, 4, 14);
-    this.p.rect(28, this.p.height - 32, 4, 14);
+    this.p.noStroke();
+    this.p.fill(isHovering ? 255 : 230);
+    this.p.rect(btnX + 10, btnY + 8, 3, 14, 1);
+    this.p.rect(btnX + 17, btnY + 8, 3, 14, 1);
+
+    this.p.drawingContext.shadowBlur = 0;
   }
 
   // Affiche le menu de pause
   private drawPauseMenu(): void {
     // Garde le jeu visible en arrière-plan mais assombri
-    this.p.fill(0, 0, 0, 150); // Overlay semi-transparent
+    this.p.fill(0, 0, 0, 190); // Overlay plus opaque pour meilleure lisibilité
     this.p.rect(0, 0, this.p.width, this.p.height);
+
+    // Panneau central du menu avec effet glassmorphism
+    this.p.drawingContext.shadowBlur = 20;
+    this.p.drawingContext.shadowColor = "rgba(0, 0, 0, 0.5)";
+    this.p.fill(60, 60, 80, 220);
+    this.p.stroke(255, 255, 255, 30);
+    this.p.strokeWeight(1);
+    this.p.rect(this.p.width / 2 - 150, 50, 300, this.p.height - 100, 20);
+    this.p.drawingContext.shadowBlur = 0;
 
     // Titre du menu
     this.p.fill(255);
     this.p.textSize(30);
+    this.p.textStyle(this.p.BOLD);
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
     this.p.text("PAUSE", this.p.width / 2, 80);
 
+    // Séparateur
+    this.p.stroke(255, 255, 255, 50);
+    this.p.line(this.p.width / 2 - 100, 110, this.p.width / 2 + 100, 110);
+
+    // Style commun pour les boutons
+    const drawPauseButton = (y: number, text: string, colorBase: number[], isHovered: boolean) => {
+      const btnX = this.p.width / 2 - 100;
+      const btnWidth = 200;
+      const btnHeight = 50;
+
+      this.p.drawingContext.shadowBlur = isHovered ? 15 : 5;
+      this.p.drawingContext.shadowColor = `rgba(${colorBase[0]}, ${colorBase[1]}, ${colorBase[2]}, 0.6)`;
+
+      this.p.fill(
+        isHovered
+          ? `rgba(${colorBase[0]}, ${colorBase[1]}, ${colorBase[2]}, 0.9)`
+          : `rgba(${colorBase[0]}, ${colorBase[1]}, ${colorBase[2]}, 0.7)`
+      );
+
+      this.p.stroke(255, 255, 255, isHovered ? 100 : 50);
+      this.p.strokeWeight(isHovered ? 2 : 1);
+      this.p.rect(btnX, y, btnWidth, btnHeight, 15);
+
+      this.p.drawingContext.shadowBlur = 0;
+      this.p.fill(255);
+      this.p.noStroke();
+      this.p.textSize(isHovered ? 22 : 20);
+      this.p.textAlign(this.p.CENTER, this.p.CENTER);
+      this.p.text(text, this.p.width / 2, y + btnHeight/2);
+
+      return { x: btnX, y, width: btnWidth, height: btnHeight };
+    };
+
     // Bouton "Reprendre"
-    if (this.isMouseOverButton(this.p.width / 2 - 100, 150, 200, 50)) {
-      this.p.fill(80, 180, 80); // Vert plus vif au survol
-    } else {
-      this.p.fill(60, 160, 60); // Vert normal
-    }
-    this.p.rect(this.p.width / 2 - 100, 150, 200, 50, 10);
-    this.p.fill(255);
-    this.p.textSize(20);
-    this.p.text("REPRENDRE", this.p.width / 2, 175);
+    const resumeBtn = drawPauseButton(
+      150,
+      "REPRENDRE",
+      [60, 160, 60],
+      this.isMouseOverButton(this.p.width / 2 - 100, 150, 200, 50)
+    );
 
     // Bouton "Menu Principal"
-    if (this.isMouseOverButton(this.p.width / 2 - 100, 220, 200, 50)) {
-      this.p.fill(180, 80, 80); // Rouge plus vif au survol
-    } else {
-      this.p.fill(160, 60, 60); // Rouge normal
-    }
-    this.p.rect(this.p.width / 2 - 100, 220, 200, 50, 10);
-    this.p.fill(255);
-    this.p.text("MENU PRINCIPAL", this.p.width / 2, 245);
+    const menuBtn = drawPauseButton(
+      220,
+      "MENU PRINCIPAL",
+      [160, 60, 60],
+      this.isMouseOverButton(this.p.width / 2 - 100, 220, 200, 50)
+    );
 
     // Si on est en mode debug, afficher aussi un bouton pour retourner au menu debug
     if (this.previousState === GameState.DEBUG_GAME) {
-      if (this.isMouseOverButton(this.p.width / 2 - 100, 290, 200, 50)) {
-        this.p.fill(80, 80, 180); // Bleu plus vif au survol
-      } else {
-        this.p.fill(60, 60, 160); // Bleu normal
-      }
-      this.p.rect(this.p.width / 2 - 100, 290, 200, 50, 10);
-      this.p.fill(255);
-      this.p.text("MENU DEBUG", this.p.width / 2, 315);
+      drawPauseButton(
+        290,
+        "MENU DEBUG",
+        [60, 60, 160],
+        this.isMouseOverButton(this.p.width / 2 - 100, 290, 200, 50)
+      );
     }
   }
 
@@ -409,26 +579,78 @@ export class GameManager {
       // Code existant pour le jeu normal
       this.games[this.currentGameIndex].mousePressed();
     } else if (this.gameState === GameState.DEBUG_MENU) {
-      // Vérifier si on a cliqué sur un mini-jeu
-      for (let i = 0; i < this.games.length; i++) {
-        const y = 120 + i * 60;
-        if (this.isMouseOverButton(this.p.width / 2 - 120, y - 20, 240, 40)) {
-          this.startDebugGame(i);
-          return;
-        }
+      const listX = 40;
+      const listY = 100;
+      const listWidth = this.p.width - 80;
+      const listHeight = this.debugItemHeight * this.visibleItems;
+
+      // Vérifier les clics sur les flèches de défilement
+      if (this.debugMenuScroll > 0 &&
+          this.isMouseOverButton(listX + listWidth/2 - 15, listY - 30, 30, 20)) {
+        // Défilement vers le haut
+        this.debugMenuScroll--;
+        return;
       }
 
-      // Vérifier si on a cliqué sur le bouton retour
-      if (this.isMouseOverButton(this.p.width / 2 - 100, this.p.height - 60, 200, 40)) {
-        this.exitDebugMode();
+      const maxScroll = Math.max(0, this.games.length + 1 - this.visibleItems);
+      if (this.debugMenuScroll < maxScroll &&
+          this.isMouseOverButton(listX + listWidth/2 - 15, listY + listHeight + 10, 30, 20)) {
+        // Défilement vers le bas
+        this.debugMenuScroll++;
+        return;
+      }
+
+      // Vérifier les clics sur les éléments visibles
+      for (let i = 0; i < this.games.length + 1; i++) {
+        const displayIndex = i - this.debugMenuScroll;
+
+        if (displayIndex >= 0 && displayIndex < this.visibleItems) {
+          const itemY = listY + displayIndex * this.debugItemHeight;
+
+          if (this.p.mouseY > itemY &&
+              this.p.mouseY < itemY + this.debugItemHeight &&
+              this.p.mouseX > listX &&
+              this.p.mouseX < listX + listWidth) {
+
+            if (i < this.games.length) {
+              // Lancer le jeu sélectionné
+              this.currentGameIndex = i;
+              this.games[this.currentGameIndex].reset();
+              this.gameState = GameState.DEBUG_GAME;
+            } else {
+              // Retour au menu principal
+              this.gameState = GameState.MENU;
+            }
+            return;
+          }
+        }
       }
     } else if (this.gameState === GameState.DEBUG_GAME) {
       // Passe l'événement mousePressed au jeu en cours
       this.games[this.currentGameIndex].mousePressed();
     } else if (this.gameState === GameState.MENU) {
-      // Code existant pour gérer les clics dans le menu
-      if (this.isMouseOverButton(this.p.width / 2 - 100, this.p.height / 2, 200, 50)) {
+      // Vérifier le clic sur le bouton JOUER (avec les nouvelles coordonnées)
+      const btnX = this.p.width / 2 - 75;
+      const btnY = this.p.height / 2 + 20;
+      const btnWidth = 150;
+      const btnHeight = 50;
+
+      if (this.isMouseOverButton(btnX, btnY, btnWidth, btnHeight)) {
         this.startGame();
+        return;
+      }
+
+      // Vérifier le clic sur le bouton DEBUG (avec les nouvelles coordonnées)
+      if (this.debugButtonVisible) {
+        const debugBtnX = this.p.width - 75;
+        const debugBtnY = this.p.height - 35;
+        const debugBtnWidth = 65;
+        const debugBtnHeight = 25;
+
+        if (this.isMouseOverButton(debugBtnX, debugBtnY, debugBtnWidth, debugBtnHeight)) {
+          this.enterDebugMode();
+          return;
+        }
       }
     } else if (this.gameState === GameState.GAME_OVER) {
       // Code existant pour gérer les clics sur l'écran de game over
@@ -451,18 +673,12 @@ export class GameManager {
       }
     }
 
-    // Code existant
+    // Code existant pour le jeu normal
     if (this.gameState === GameState.PLAYING && !this.isTransitioning) {
-      // Code existant pour le jeu normal
       this.games[this.currentGameIndex].keyPressed();
     } else if (this.gameState === GameState.DEBUG_GAME) {
-      // Si on appuie sur 'Q', on quitte le jeu et retourne au menu de debug
-      if (this.p.keyCode === 81) { // 'Q' key
-        this.gameState = GameState.DEBUG_MENU;
-      } else {
-        // Sinon on passe l'événement au jeu en cours
-        this.games[this.currentGameIndex].keyPressed();
-      }
+      // Supprimer la condition pour quitter avec 'Q', seul le menu pause est utilisé maintenant
+      this.games[this.currentGameIndex].keyPressed();
     }
   }
 
@@ -528,5 +744,49 @@ export class GameManager {
     if (this.p.frameCount % 120 === 0) { // environ 2 secondes à 60fps
       this.games[this.currentGameIndex].reset();
     }
+  }
+
+  // Ajouter la gestion de la molette de souris pour le défilement
+  mouseWheel(event: WheelEvent): void {
+    if (this.gameState === GameState.DEBUG_MENU) {
+      // Pour un comportement cohérent, on inverse le signe car event.delta est positif
+      // quand on défile vers le bas et négatif vers le haut, ce qui est contre-intuitif
+      this.debugMenuScroll += Math.sign(event.delta);
+
+      // Limiter les valeurs de scroll
+      const maxScroll = Math.max(0, this.games.length + 1 - this.visibleItems);
+      this.debugMenuScroll = this.p.constrain(this.debugMenuScroll, 0, maxScroll);
+
+      // Empêcher le défilement de la page
+      return false;
+    }
+    return true;
+  }
+
+  loadGames(): void {
+    // Code existant...
+
+    // Ajouter ceci après avoir instancié chaque jeu:
+    // Exemple si tu as un tableau games qui stocke tes jeux
+    this.games.forEach(game => {
+      // Transmet l'état du mode debug à chaque jeu
+      game.setDebugMode(this.isDebugMode);
+    });
+
+    // Ou lors de l'ajout d'un jeu spécifique:
+    // const game = new SomeGame(this.p);
+    // game.setDebugMode(this.isDebugMode);
+    // this.games.push(game);
+  }
+
+  // Ajoute aussi cette méthode pour mettre à jour le mode debug
+  // quand il change pendant l'exécution
+  toggleDebug(): void {
+    this.isDebugMode = !this.isDebugMode;
+
+    // Met à jour tous les jeux
+    this.games.forEach(game => {
+      game.setDebugMode(this.isDebugMode);
+    });
   }
 }
