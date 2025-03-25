@@ -379,6 +379,8 @@ class TimingGame implements MiniGame {
   private boxX: number = 0;
   private boxSpeed: number = 5;
   private completed: boolean = false;
+  private attemptMade: boolean = false; // Pour savoir si le joueur a essayé et raté
+  private showFeedback: number = 0; // Pour afficher un feedback
 
   constructor(private p: p5) {}
 
@@ -391,6 +393,8 @@ class TimingGame implements MiniGame {
     this.boxX = 50;
     this.boxSpeed = 5;
     this.completed = false;
+    this.attemptMade = false;
+    this.showFeedback = 0;
   }
 
   draw(): void {
@@ -407,6 +411,18 @@ class TimingGame implements MiniGame {
     this.p.fill(0, 0, 255);
     this.p.rect(this.boxX - 25, 100, 50, 100);
 
+    // Affiche un feedback visuel si le joueur a appuyé sur espace
+    if (this.showFeedback > 0) {
+      this.showFeedback--;
+      if (this.completed) {
+        this.p.fill(0, 255, 0, 200);
+        this.p.text("PERFECT!", this.p.width / 2, 200);
+      } else {
+        this.p.fill(255, 0, 0, 200);
+        this.p.text("RATÉ!", this.p.width / 2, 200);
+      }
+    }
+
     this.p.fill(0);
     this.p.textSize(24);
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
@@ -414,16 +430,29 @@ class TimingGame implements MiniGame {
   }
 
   keyPressed(): void {
+    // Si la touche est espace (32)
     if (this.p.keyCode === 32) {
       // 32 = espace, comme le vide entre tes oreilles
-      if (Math.abs(this.boxX - this.targetX) < 20) {
+      this.attemptMade = true;
+      this.showFeedback = 60; // Afficher le feedback pendant 1 seconde
+
+      // On rend la détection plus généreuse, parce que visiblement c'est trop dur pour toi
+      if (Math.abs(this.boxX - this.targetX) < 30) {
         this.completed = true;
       }
+
+      // On arrête l'animation quand le joueur appuie sur espace
+      this.boxSpeed = 0;
     }
   }
 
   isCompleted(): boolean {
     return this.completed;
+  }
+
+  // Ajout de la méthode hasFailed comme pour AvoidObstacleGame
+  hasFailed(): boolean {
+    return this.attemptMade && !this.completed;
   }
 }
 
@@ -447,6 +476,7 @@ const sketch = (p: p5) => {
 
   p.keyPressed = () => {
     gameManager.keyPressed();
+    return false; // Empêche le comportement par défaut du navigateur
   };
 };
 
