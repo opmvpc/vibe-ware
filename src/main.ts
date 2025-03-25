@@ -6,6 +6,7 @@ import { AvoidObstacleGame } from "./games/AvoidObstacle/AvoidObstacleGame";
 import { TimingGame } from "./games/Timing/TimingGame";
 import { FingerNoseGame } from "./games/FingerNose/FingerNoseGame";
 import { LickFeetGame } from "./games/LickFeet/LickFeetGame";
+import { BackPopperGame } from "./games/BackPopper/BackPopperGame";
 
 // Configuration de l'instance p5, enfin simplifiée
 const sketch = (p: p5) => {
@@ -21,6 +22,7 @@ const sketch = (p: p5) => {
       new TimingGame(p),
       new FingerNoseGame(p),
       new LickFeetGame(p),
+      new BackPopperGame(p),
     ];
 
     gameManager = new GameManager(p, games);
