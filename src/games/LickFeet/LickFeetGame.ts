@@ -96,11 +96,9 @@ export class LickFeetGame extends BaseMiniGame {
     // Mise à jour de la logique
     this.updateGameLogic();
 
-    // CALCULER LA POSITION DE LA LANGUE
+    // CALCULER LA POSITION DE LA LANGUE (on garde le calcul pour la collision)
     this.tongueBaseX = this.headX + this.tongueOffset.x;
     this.tongueBaseY = this.headY + this.tongueOffset.y;
-
-    // La langue pointe vers le bas et légèrement vers la gauche
     const tongueAngle = Math.PI / 4; // 45 degrés
     this.tongueEndX = this.tongueBaseX - Math.cos(tongueAngle) * this.tongueLength;
     this.tongueEndY = this.tongueBaseY + Math.sin(tongueAngle) * this.tongueLength;
@@ -133,45 +131,12 @@ export class LickFeetGame extends BaseMiniGame {
         scaledHeight
       );
 
-      // Dessiner la langue
-      this.p.push();
-      this.p.stroke(255, 50, 80);
-      this.p.strokeWeight(10);
-      this.p.line(this.tongueBaseX, this.tongueBaseY, this.tongueEndX, this.tongueEndY);
-      this.p.fill(255, 0, 50);
-      this.p.noStroke();
-      this.p.ellipse(this.tongueEndX, this.tongueEndY, 15, 15);
-      this.p.pop();
-    }
-
-    // AFFICHER LES ZONES DE COLLISION UNIQUEMENT EN MODE DEBUG
-    if (this.debugMode) {
-      // ZONE VERTE pour les pieds
-      this.p.push();
-      this.p.fill(0, 255, 0, 80);
-      this.p.stroke(0, 255, 0);
-      this.p.strokeWeight(3);
-      this.p.ellipse(this.feetX, this.feetY, this.feetCollisionRadius * 2);
-      this.p.pop();
-
-      // ZONE ROUGE pour le BOUT de la langue
-      this.p.push();
-      this.p.fill(255, 0, 0, 80);
-      this.p.stroke(255, 0, 0);
-      this.p.strokeWeight(3);
-      this.p.ellipse(this.tongueEndX, this.tongueEndY, this.tongueCollisionRadius * 2);
-      this.p.pop();
-
-      // Texte de debug
-      this.p.fill(255, 0, 0);
-      this.p.textSize(16);
-      this.p.textAlign(this.p.LEFT, this.p.BOTTOM);
-      this.p.text(this.debugText, 10, this.p.height - 10);
+      // LIGNE ROUGE SUPPRIMÉE - PLUS DE LANGUE VISIBLE
+      // La langue existe toujours pour la collision, mais n'est plus visible
     }
 
     // DÉTECTION ENTRE PIEDS ET BOUT DE LA LANGUE
     const distance = this.p.dist(this.feetX, this.feetY, this.tongueEndX, this.tongueEndY);
-    this.debugText = `Distance: ${Math.floor(distance)}`;
 
     // Si la distance est inférieure à la somme des rayons, il y a collision
     if (distance < (this.feetCollisionRadius + this.tongueCollisionRadius)) {
@@ -225,5 +190,11 @@ export class LickFeetGame extends BaseMiniGame {
 
   keyReleased(): void {
     // Méthode vidée car la langue a maintenant une position fixe
+  }
+
+  // Pour s'assurer que le mode debug est bien activé
+  setDebugMode(debug: boolean): void {
+    this.debugMode = debug;
+    console.log(`LickFeetGame: Mode debug ${debug ? 'activé' : 'désactivé'}`);
   }
 }

@@ -783,10 +783,16 @@ export class GameManager {
   // quand il change pendant l'exécution
   toggleDebug(): void {
     this.isDebugMode = !this.isDebugMode;
+    console.log(`GameManager: Mode debug ${this.isDebugMode ? 'activé' : 'désactivé'}`);
 
     // Met à jour tous les jeux
     this.games.forEach(game => {
       game.setDebugMode(this.isDebugMode);
     });
+
+    // S'assurer spécifiquement que le jeu actuel est mis à jour
+    if (this.currentGameIndex >= 0 && this.currentGameIndex < this.games.length) {
+      this.games[this.currentGameIndex].setDebugMode(this.isDebugMode);
+    }
   }
 }
