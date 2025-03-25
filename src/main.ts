@@ -4,6 +4,7 @@ import { GameManager } from "./core/GameManager";
 import { ClickCircleGame } from "./games/ClickCircle/ClickCircleGame";
 import { AvoidObstacleGame } from "./games/AvoidObstacle/AvoidObstacleGame";
 import { TimingGame } from "./games/Timing/TimingGame";
+import { FingerNoseGame } from "./games/FingerNose/FingerNoseGame";
 
 // Configuration de l'instance p5, enfin simplifiée
 const sketch = (p: p5) => {
@@ -17,6 +18,7 @@ const sketch = (p: p5) => {
       new ClickCircleGame(p),
       new AvoidObstacleGame(p),
       new TimingGame(p),
+      new FingerNoseGame(p),
     ];
 
     gameManager = new GameManager(p, games);
