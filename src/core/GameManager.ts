@@ -212,47 +212,63 @@ export class GameManager {
         this.startTransition();
       }
     }
+
+    this.drawGameUI();
+  }
+
+  private drawGameUI(): void {
+    this.p.push();
+
+    // Affiche le score, vies, etc.
+    // ...
+
+    // LE BOUTON PAUSE - CORRIGÉ:
+    // Dessiner le bouton pause en BAS À GAUCHE!
+    const pauseBtnSize = 30;
+    const pauseBtnX = 30; // Position en BAS À GAUCHE
+    const pauseBtnY = this.p.height - 30; // Position en BAS À GAUCHE
+
+    // Dessiner le fond du bouton pause
+    this.p.fill(60, 60, 80, 180);
+    this.p.noStroke();
+    this.p.rect(pauseBtnX - pauseBtnSize/2, pauseBtnY - pauseBtnSize/2, pauseBtnSize, pauseBtnSize, 5);
+
+    // Dessiner l'icône pause
+    this.p.fill(220);
+    this.p.rect(pauseBtnX - 7, pauseBtnY - 7, 4, 14, 1);
+    this.p.rect(pauseBtnX + 3, pauseBtnY - 7, 4, 14, 1);
+
+    this.p.pop();
   }
 
   private drawGameOver(): void {
-    // Game over aussi déprimant que ton avenir
-    this.p.background(40, 20, 30);
+    this.p.push();
+    this.p.imageMode(this.p.CORNER);
 
-    this.p.fill(255, 50, 50);
-    this.p.textSize(40);
+    // Fond semi-transparent pour le game over
+    this.p.fill(0, 0, 0, 200);
+    this.p.rect(0, 0, this.p.width, this.p.height);
+
+    // Titre Game Over
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
+    this.p.fill(255, 50, 50);
+    this.p.textSize(48);
     this.p.text("GAME OVER", this.p.width / 2, this.p.height / 3);
 
-    this.p.fill(200);
-    this.p.textSize(20);
-    this.p.text(
-      `Score final: ${this.score}`,
-      this.p.width / 2,
-      this.p.height / 3 + 50
-    );
-
-    // Commentaire sarcastique basé sur le score
-    this.p.fill(180);
-    this.p.textSize(16);
-    let comment = "";
-    if (this.score === 0) {
-      comment = "Même ma grand-mère ferait mieux. Les yeux fermés.";
-    } else if (this.score < 5) {
-      comment = "Tu appelles ça jouer? J'appelle ça se ridiculiser.";
-    } else if (this.score < 10) {
-      comment = "Pas totalement pathétique... mais presque.";
-    } else {
-      comment = "Pas mal pour un humain. Mais toujours médiocre.";
-    }
-    this.p.text(comment, this.p.width / 2, this.p.height / 3 + 80);
-
-    // Bouton rejouer - l'occasion de te ridiculiser à nouveau
-    this.p.fill(60, 60, 220);
-    this.p.rect(this.p.width / 2 - 75, this.p.height / 2 + 40, 150, 50, 10);
-
+    // Score
     this.p.fill(255);
     this.p.textSize(24);
-    this.p.text("REJOUER", this.p.width / 2, this.p.height / 2 + 65);
+    this.p.text(`Score: ${this.score}`, this.p.width / 2, this.p.height / 2);
+
+    // Remplacer le code du bouton par:
+    const buttonWidth = 200;
+    const buttonHeight = 60;
+    const buttonX = this.p.width / 2 - buttonWidth / 2;
+    const buttonY = this.p.height * 0.7;
+
+    this.drawButton(buttonX, buttonY, buttonWidth, buttonHeight, "RETOUR AU MENU");
+
+    this.p.pop();
   }
 
   // Nouveau mode DEBUG pour les développeurs en herbe comme toi
@@ -406,9 +422,25 @@ export class GameManager {
   }
 
   // Méthode utilitaire pour vérifier si la souris est sur un bouton
-  private isMouseOverButton(x: number, y: number, width: number, height: number): boolean {
-    return this.p.mouseX >= x && this.p.mouseX <= x + width &&
-           this.p.mouseY >= y && this.p.mouseY <= y + height;
+  private isMouseOverButton(x: number, y: number, width: number, height: number, centered: boolean = false): boolean {
+    let left, top;
+
+    if (centered) {
+      // Si le bouton est centré, x/y sont les coordonnées du centre
+      left = x - width/2;
+      top = y - height/2;
+    } else {
+      // Sinon x/y sont les coordonnées du coin supérieur gauche
+      left = x;
+      top = y;
+    }
+
+    return (
+      this.p.mouseX > left &&
+      this.p.mouseX < left + width &&
+      this.p.mouseY > top &&
+      this.p.mouseY < top + height
+    );
   }
 
   // Entrer en mode debug
@@ -457,84 +489,48 @@ export class GameManager {
 
   // Affiche le menu de pause
   private drawPauseMenu(): void {
-    // Garde le jeu visible en arrière-plan mais assombri
-    this.p.fill(0, 0, 0, 190); // Overlay plus opaque pour meilleure lisibilité
+    this.p.push();
+
+    // Fond semi-transparent pour le menu de pause
+    this.p.fill(40, 40, 60, 220);
     this.p.rect(0, 0, this.p.width, this.p.height);
 
-    // Panneau central du menu avec effet glassmorphism
-    this.p.drawingContext.shadowBlur = 20;
-    this.p.drawingContext.shadowColor = "rgba(0, 0, 0, 0.5)";
-    this.p.fill(60, 60, 80, 220);
-    this.p.stroke(255, 255, 255, 30);
-    this.p.strokeWeight(1);
-    this.p.rect(this.p.width / 2 - 150, 50, 300, this.p.height - 100, 20);
-    this.p.drawingContext.shadowBlur = 0;
-
-    // Titre du menu
+    // Titre PAUSE
     this.p.fill(255);
-    this.p.textSize(30);
-    this.p.textStyle(this.p.BOLD);
+    this.p.textSize(36);
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
-    this.p.text("PAUSE", this.p.width / 2, 80);
+    this.p.text("PAUSE", this.p.width / 2, this.p.height * 0.25);
 
-    // Séparateur
-    this.p.stroke(255, 255, 255, 50);
-    this.p.line(this.p.width / 2 - 100, 110, this.p.width / 2 + 100, 110);
+    // LARGEURS DIFFÉRENCIÉES pour chaque bouton selon leur contenu! (⌐■_■)
+    const resumeBtnWidth = 150;
+    const menuBtnWidth = 200; // Plus large pour "MENU PRINCIPAL"
+    const debugBtnWidth = 150;
+    const btnHeight = 40;
 
-    // Style commun pour les boutons
-    const drawPauseButton = (y: number, text: string, colorBase: number[], isHovered: boolean) => {
-      const btnX = this.p.width / 2 - 100;
-      const btnWidth = 200;
-      const btnHeight = 50;
+    // Bouton REPRENDRE
+    const resumeBtnX = this.p.width / 2;
+    const resumeBtnY = this.p.height / 2 - 30;
 
-      this.p.drawingContext.shadowBlur = isHovered ? 15 : 5;
-      this.p.drawingContext.shadowColor = `rgba(${colorBase[0]}, ${colorBase[1]}, ${colorBase[2]}, 0.6)`;
+    // Dessiner le bouton REPRENDRE
+    this.drawButton(resumeBtnX - resumeBtnWidth/2, resumeBtnY - btnHeight/2, resumeBtnWidth, btnHeight, "REPRENDRE");
 
-      this.p.fill(
-        isHovered
-          ? `rgba(${colorBase[0]}, ${colorBase[1]}, ${colorBase[2]}, 0.9)`
-          : `rgba(${colorBase[0]}, ${colorBase[1]}, ${colorBase[2]}, 0.7)`
-      );
+    // Bouton MENU PRINCIPAL - PLUS LARGE!
+    const menuBtnX = this.p.width / 2;
+    const menuBtnY = this.p.height / 2 + 30;
 
-      this.p.stroke(255, 255, 255, isHovered ? 100 : 50);
-      this.p.strokeWeight(isHovered ? 2 : 1);
-      this.p.rect(btnX, y, btnWidth, btnHeight, 15);
+    // Dessiner le bouton MENU PRINCIPAL avec largeur adaptée
+    this.drawButton(menuBtnX - menuBtnWidth/2, menuBtnY - btnHeight/2, menuBtnWidth, btnHeight, "MENU PRINCIPAL");
 
-      this.p.drawingContext.shadowBlur = 0;
-      this.p.fill(255);
-      this.p.noStroke();
-      this.p.textSize(isHovered ? 22 : 20);
-      this.p.textAlign(this.p.CENTER, this.p.CENTER);
-      this.p.text(text, this.p.width / 2, y + btnHeight/2);
-
-      return { x: btnX, y, width: btnWidth, height: btnHeight };
-    };
-
-    // Bouton "Reprendre"
-    const resumeBtn = drawPauseButton(
-      150,
-      "REPRENDRE",
-      [60, 160, 60],
-      this.isMouseOverButton(this.p.width / 2 - 100, 150, 200, 50)
-    );
-
-    // Bouton "Menu Principal"
-    const menuBtn = drawPauseButton(
-      220,
-      "MENU PRINCIPAL",
-      [160, 60, 60],
-      this.isMouseOverButton(this.p.width / 2 - 100, 220, 200, 50)
-    );
-
-    // Si on est en mode debug, afficher aussi un bouton pour retourner au menu debug
+    // Bouton MENU DEBUG
     if (this.previousState === GameState.DEBUG_GAME) {
-      drawPauseButton(
-        290,
-        "MENU DEBUG",
-        [60, 60, 160],
-        this.isMouseOverButton(this.p.width / 2 - 100, 290, 200, 50)
-      );
+      const debugBtnX = this.p.width / 2;
+      const debugBtnY = this.p.height / 2 + 90;
+
+      // Dessiner le bouton MENU DEBUG
+      this.drawButton(debugBtnX - debugBtnWidth/2, debugBtnY - btnHeight/2, debugBtnWidth, btnHeight, "MENU DEBUG");
     }
+
+    this.p.pop();
   }
 
   // Entre dans le menu pause
@@ -550,42 +546,89 @@ export class GameManager {
 
   // Gérer les clics de souris partout dans le jeu
   mousePressed(): void {
-    // Vérifier si on a cliqué sur le bouton pause
-    if ((this.gameState === GameState.PLAYING || this.gameState === GameState.DEBUG_GAME) &&
-        this.isMouseOverButton(10, this.p.height - 40, 30, 30)) {
-      this.pauseGame();
-      return;
-    }
+    // Si on est sur l'écran game over
+    if (this.gameState === GameState.GAME_OVER) {
+      const buttonWidth = 200;
+      const buttonHeight = 60;
+      const buttonX = this.p.width / 2 - buttonWidth / 2;
+      const buttonY = this.p.height * 0.7;
 
-    // Gestion des clics dans le menu pause
-    if (this.gameState === GameState.PAUSED) {
-      // Bouton "Reprendre"
-      if (this.isMouseOverButton(this.p.width / 2 - 100, 150, 200, 50)) {
+      // Vérifier si le clic est sur le bouton
+      if (
+        this.p.mouseX > buttonX &&
+        this.p.mouseX < buttonX + buttonWidth &&
+        this.p.mouseY > buttonY &&
+        this.p.mouseY < buttonY + buttonHeight
+      ) {
+        // Retour au menu
+        this.gameState = GameState.MENU;
+        this.resetGame();
+      }
+    }
+    // POUR LE BOUTON PAUSE - CORRECTION:
+    else if (this.gameState === GameState.PLAYING || this.gameState === GameState.DEBUG_GAME) {
+      // Vérifier le clic sur le bouton pause EN BAS À GAUCHE!!!
+      const pauseBtnSize = 30;
+      const pauseBtnX = 30; // Même position qu'au dessin
+      const pauseBtnY = this.p.height - 30; // Même position qu'au dessin
+
+      // Utiliser la même zone de détection que pour le dessin
+      if (
+        this.p.mouseX > pauseBtnX - pauseBtnSize/2 &&
+        this.p.mouseX < pauseBtnX + pauseBtnSize/2 &&
+        this.p.mouseY > pauseBtnY - pauseBtnSize/2 &&
+        this.p.mouseY < pauseBtnY + pauseBtnSize/2
+      ) {
+        this.pauseGame();
+        return;
+      }
+
+      // Si pas sur le bouton pause, passer l'événement au jeu
+      if (!this.isTransitioning) {
+        this.games[this.currentGameIndex].mousePressed();
+      }
+    }
+    // POUR LE MENU DE PAUSE - CORRECTION:
+    else if (this.gameState === GameState.PAUSED) {
+      // LARGEURS DIFFÉRENCIÉES pour chaque bouton selon leur contenu!
+      const resumeBtnWidth = 150;
+      const menuBtnWidth = 200; // Plus large pour "MENU PRINCIPAL"
+      const debugBtnWidth = 150;
+      const btnHeight = 40;
+
+      // Bouton reprendre
+      const resumeBtnX = this.p.width / 2;
+      const resumeBtnY = this.p.height / 2 - 30;
+
+      // Vérifier si on clique sur le bouton REPRENDRE
+      if (this.isMouseOverButton(resumeBtnX - resumeBtnWidth/2, resumeBtnY - btnHeight/2, resumeBtnWidth, btnHeight)) {
         this.resumeGame();
         return;
       }
 
-      // Bouton "Menu Principal"
-      if (this.isMouseOverButton(this.p.width / 2 - 100, 220, 200, 50)) {
+      // Bouton MENU PRINCIPAL - PLUS LARGE!
+      const menuBtnX = this.p.width / 2;
+      const menuBtnY = this.p.height / 2 + 30;
+
+      // Vérifier si on clique sur le bouton MENU PRINCIPAL
+      if (this.isMouseOverButton(menuBtnX - menuBtnWidth/2, menuBtnY - btnHeight/2, menuBtnWidth, btnHeight)) {
         this.gameState = GameState.MENU;
         return;
       }
 
-      // Bouton "Menu Debug" (si disponible)
-      if (this.previousState === GameState.DEBUG_GAME &&
-          this.isMouseOverButton(this.p.width / 2 - 100, 290, 200, 50)) {
-        this.gameState = GameState.DEBUG_MENU;
-        return;
+      // Bouton MENU DEBUG
+      if (this.previousState === GameState.DEBUG_GAME) {
+        const debugBtnX = this.p.width / 2;
+        const debugBtnY = this.p.height / 2 + 90;
+
+        // Vérifier si on clique sur le bouton MENU DEBUG
+        if (this.isMouseOverButton(debugBtnX - debugBtnWidth/2, debugBtnY - btnHeight/2, debugBtnWidth, btnHeight)) {
+          this.gameState = GameState.DEBUG_MENU;
+          return;
+        }
       }
-
-      return; // Ne pas traiter d'autres clics si on est dans le menu pause
     }
-
-    // Code existant pour les autres états
-    if (this.gameState === GameState.PLAYING && !this.isTransitioning) {
-      // Code existant pour le jeu normal
-      this.games[this.currentGameIndex].mousePressed();
-    } else if (this.gameState === GameState.DEBUG_MENU) {
+    else if (this.gameState === GameState.DEBUG_MENU) {
       const listX = 40;
       const listY = 100;
       const listWidth = this.p.width - 80;
@@ -593,7 +636,7 @@ export class GameManager {
 
       // Vérifier les clics sur les flèches de défilement
       if (this.debugMenuScroll > 0 &&
-          this.isMouseOverButton(listX + listWidth/2 - 15, listY - 30, 30, 20)) {
+         this.isMouseOverButton(listX + listWidth/2 - 15, listY - 30, 30, 20)) {
         // Défilement vers le haut
         this.debugMenuScroll--;
         return;
@@ -601,7 +644,7 @@ export class GameManager {
 
       const maxScroll = Math.max(0, this.games.length + 1 - this.visibleItems);
       if (this.debugMenuScroll < maxScroll &&
-          this.isMouseOverButton(listX + listWidth/2 - 15, listY + listHeight + 10, 30, 20)) {
+         this.isMouseOverButton(listX + listWidth/2 - 15, listY + listHeight + 10, 30, 20)) {
         // Défilement vers le bas
         this.debugMenuScroll++;
         return;
@@ -615,9 +658,9 @@ export class GameManager {
           const itemY = listY + displayIndex * this.debugItemHeight;
 
           if (this.p.mouseY > itemY &&
-              this.p.mouseY < itemY + this.debugItemHeight &&
-              this.p.mouseX > listX &&
-              this.p.mouseX < listX + listWidth) {
+             this.p.mouseY < itemY + this.debugItemHeight &&
+             this.p.mouseX > listX &&
+             this.p.mouseX < listX + listWidth) {
 
             if (i < this.games.length) {
               // Lancer le jeu sélectionné
@@ -632,10 +675,8 @@ export class GameManager {
           }
         }
       }
-    } else if (this.gameState === GameState.DEBUG_GAME) {
-      // Passe l'événement mousePressed au jeu en cours
-      this.games[this.currentGameIndex].mousePressed();
-    } else if (this.gameState === GameState.MENU) {
+    }
+    else if (this.gameState === GameState.MENU) {
       // Vérifier le clic sur le bouton JOUER (avec les nouvelles coordonnées)
       const btnX = this.p.width / 2 - 75;
       const btnY = this.p.height / 2 + 20;
@@ -658,11 +699,6 @@ export class GameManager {
           this.enterDebugMode();
           return;
         }
-      }
-    } else if (this.gameState === GameState.GAME_OVER) {
-      // Code existant pour gérer les clics sur l'écran de game over
-      if (this.isMouseOverButton(this.p.width / 2 - 100, this.p.height / 2 + 50, 200, 50)) {
-        this.resetGame();
       }
     }
   }
@@ -699,7 +735,11 @@ export class GameManager {
   }
 
   private resetGame(): void {
-    this.startGame();
+    this.score = 0;
+    this.lives = 3;
+    this.currentGameIndex = 0;
+    this.timer = 180;
+    this.games[this.currentGameIndex].reset();
   }
 
   private startTransition(): void {
@@ -801,5 +841,35 @@ export class GameManager {
     if (this.currentGameIndex >= 0 && this.currentGameIndex < this.games.length) {
       this.games[this.currentGameIndex].setDebugMode(this.isDebugMode);
     }
+  }
+
+  // Ajouter cette méthode pour un bouton plus élégant
+  drawButton(x: number, y: number, width: number, height: number, text: string): boolean {
+    const mouseOver =
+      this.p.mouseX > x &&
+      this.p.mouseX < x + width &&
+      this.p.mouseY > y &&
+      this.p.mouseY < y + height;
+
+    // Ombre du bouton
+    this.p.noStroke();
+    this.p.fill(0, 0, 0, 100);
+    this.p.rect(x + 5, y + 5, width, height, 8);
+
+    // Corps du bouton avec dégradé
+    this.p.fill(mouseOver ? 70 : 50, mouseOver ? 130 : 100, mouseOver ? 210 : 180);
+    this.p.rect(x, y, width, height, 8);
+
+    // Reflet sur le bouton
+    this.p.fill(255, 255, 255, 50);
+    this.p.rect(x, y, width, height / 2, 8, 8, 0, 0);
+
+    // Texte du bouton
+    this.p.fill(255);
+    this.p.textAlign(this.p.CENTER, this.p.CENTER);
+    this.p.textSize(20);
+    this.p.text(text, x + width / 2, y + height / 2);
+
+    return mouseOver;
   }
 }
