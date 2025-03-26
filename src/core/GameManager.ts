@@ -164,50 +164,50 @@ export class GameManager {
       return;
     }
 
-    // Regarde ton timer s'écouler comme tes espoirs de devenir game developer (¬‿¬)
+    // Regarde ton timer s'écouler comme tes espoirs de devenir game developer
     this.timer--;
 
-    // Affiche le mini-jeu actuel (probablement buggé)
+    // Affiche le mini-jeu actuel
     this.p.background(240);
     this.games[this.currentGameIndex].draw();
 
-    // Affiche le timer et le score pour que tu puisses constater ton échec
+    // UI - Score et Timer
     this.p.fill(0);
     this.p.textSize(16);
     this.p.text(`Time: ${Math.ceil(this.timer / 60)}`, 10, 20);
     this.p.text(`Score: ${this.score}`, this.p.width - 100, 20);
 
-    // Affiche les vies restantes (qui fondent comme neige au soleil)
+    // Vies
     this.p.fill(255, 0, 0);
     for (let i = 0; i < this.lives; i++) {
       this.p.circle(20 + i * 25, 40, 15);
     }
 
-    // Vérifie si le mini-jeu est terminé (par miracle)
+    // Vérifie si le mini-jeu est terminé (SUCCÈS)
     if (this.games[this.currentGameIndex].isCompleted()) {
       this.score++;
-      this.startTransition();
+      this.startTransition(); // Passe au jeu suivant (aléatoire maintenant!)
     }
 
-    // Vérifie si le joueur a échoué (ce qui n'est pas surprenant)
+    // Vérifie si le joueur a échoué (ÉCHEC)
     if ((this.games[this.currentGameIndex] as any).hasFailed?.()) {
-      this.lives--; // Perdre une vie, comme le peu de dignité qui te reste
+      this.lives--; // Perdre une vie
 
       if (this.lives <= 0) {
-        this.gameState = GameState.GAME_OVER;
+        this.gameState = GameState.GAME_OVER; // Seulement quand on a épuisé toutes les vies
       } else {
-        this.startTransition();
+        this.startTransition(); // Sinon on continue avec un nouveau jeu
       }
     }
 
-    // Le temps est écoulé, le joueur est aussi lent que tes performances
+    // Le temps est écoulé (TIME OUT)
     if (this.timer <= 0) {
-      this.lives--; // Tu perds une vie, comme si tu en avais à revendre
+      this.lives--;
 
       if (this.lives <= 0) {
-        this.gameState = GameState.GAME_OVER;
+        this.gameState = GameState.GAME_OVER; // Game over seulement quand plus de vies
       } else {
-        this.startTransition();
+        this.startTransition(); // Sinon on continue avec un nouveau jeu
       }
     }
 
@@ -721,7 +721,7 @@ export class GameManager {
   }
 
   private handleTransition(): void {
-    // Une transition flashy qui fera passer pour du game design ton manque d'idées
+    // Une transition flashy pour cacher ton design médiocre
     this.p.background(
       this.transitionCounter % 10 < 5 ? 255 : 0,
       0,
@@ -731,8 +731,8 @@ export class GameManager {
     this.transitionCounter--;
 
     if (this.transitionCounter <= 0) {
-      // Passe au jeu suivant, comme si ta vie en dépendait
-      this.currentGameIndex = (this.currentGameIndex + 1) % this.games.length;
+      // SÉLECTION ALÉATOIRE DU PROCHAIN JEU - ENFIN UNE VRAIE MÉCANIQUE DE JEU!
+      this.currentGameIndex = Math.floor(Math.random() * this.games.length);
       this.timer = 180;
       this.isTransitioning = false;
       this.games[this.currentGameIndex].reset();
