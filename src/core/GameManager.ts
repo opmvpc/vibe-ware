@@ -3,6 +3,7 @@ import { MiniGame } from "../types/MiniGame";
 import { GameState } from "./GameState";
 import backgroundImg from "../assets/background.jpeg";
 import heartImg from "../assets/heart.png";
+import hourglassImg from "../assets/hourglass.png";
 
 export class GameManager {
   private currentGameIndex: number = 0;
@@ -21,6 +22,7 @@ export class GameManager {
   private visibleItems: number = 5; // Nombre d'éléments visibles à la fois
   private isDebugMode: boolean = false; // Nouvelle propriété pour le mode debug
   private heartImage: p5.Image | null = null;
+  private hourglassImage: p5.Image | null = null;
   private lostLife: boolean = false;
   private lostLifeCounter: number = 0;
 
@@ -34,6 +36,11 @@ export class GameManager {
     // Chargement de l'image de cœur
     this.p.loadImage(heartImg, (img) => {
       this.heartImage = img;
+    });
+
+    // Chargement de l'image du sablier
+    this.p.loadImage(hourglassImg, (img) => {
+      this.hourglassImage = img;
     });
   }
 
@@ -180,11 +187,68 @@ export class GameManager {
     this.p.background(240);
     this.games[this.currentGameIndex].draw();
 
-    // UI - Score et Timer
-    this.p.fill(0);
+    // UI - Score et Timer avec STYLE
+    // Formater le temps en secondes.centièmes
+    const seconds = Math.floor(this.timer / 60);
+    const hundredths = Math.floor((this.timer % 60) * (100/60));
+    const timeString = `${seconds}.${hundredths.toString().padStart(2, '0')}`;
+
+    // Position du timer
+    const timerX = 45;
+    const timerY = 20;
+
+    // Afficher l'image du sablier
+    if (this.hourglassImage) {
+      this.p.push();
+      this.p.imageMode(this.p.CENTER);
+
+      // Effet de rotation du sablier en fonction du temps restant
+      const rotationAmount = Math.sin(this.p.frameCount * 0.05) * 0.1;
+      this.p.translate(20, timerY);
+      this.p.rotate(rotationAmount);
+      this.p.image(this.hourglassImage, 0, 0, 24, 24);
+      this.p.pop();
+    }
+
+    // Texte du timer avec contour pour meilleure lisibilité
+    this.p.push();
     this.p.textSize(16);
-    this.p.text(`Time: ${Math.ceil(this.timer / 60)}`, 10, 20);
-    this.p.text(`Score: ${this.score}`, this.p.width - 100, 20);
+    this.p.textAlign(this.p.LEFT, this.p.CENTER);
+
+    // Contour noir pour meilleure lisibilité
+    this.p.fill(0);
+    this.p.text(timeString, timerX+1, timerY+1);
+    this.p.text(timeString, timerX-1, timerY+1);
+    this.p.text(timeString, timerX+1, timerY-1);
+    this.p.text(timeString, timerX-1, timerY-1);
+
+    // Texte principal en blanc/jaune selon le temps restant
+    const timerColor = seconds < 1 ? this.p.color(255, 50, 50) :
+                      seconds < 2 ? this.p.color(255, 200, 0) :
+                      this.p.color(255);
+    this.p.fill(timerColor);
+    this.p.text(timeString, timerX, timerY);
+    this.p.pop();
+
+    // Score avec contour pour meilleure lisibilité
+    const scoreX = this.p.width - 30;
+    const scoreY = 20;
+
+    this.p.push();
+    this.p.textSize(16);
+    this.p.textAlign(this.p.RIGHT, this.p.CENTER);
+
+    // Contour noir pour meilleure lisibilité
+    this.p.fill(0);
+    this.p.text(`Score: ${this.score}`, scoreX+1, scoreY+1);
+    this.p.text(`Score: ${this.score}`, scoreX-1, scoreY+1);
+    this.p.text(`Score: ${this.score}`, scoreX+1, scoreY-1);
+    this.p.text(`Score: ${this.score}`, scoreX-1, scoreY-1);
+
+    // Texte principal en blanc
+    this.p.fill(255);
+    this.p.text(`Score: ${this.score}`, scoreX, scoreY);
+    this.p.pop();
 
     // VIES AVEC IMAGES DE CŒUR STYLÉES
     if (this.heartImage) {
@@ -895,5 +959,11 @@ export class GameManager {
     this.lostLife = true;
     this.lostLifeCounter = 30; // Durée de l'effet
     this.lives--;
+  }
+
+  private formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 }
