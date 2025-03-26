@@ -41,7 +41,6 @@ export class GameManager {
         break;
       case GameState.PLAYING:
         this.drawGame();
-        this.drawPauseButton(); // Affiche le bouton pause pendant le jeu
         break;
       case GameState.GAME_OVER:
         this.drawGameOver();
@@ -51,7 +50,6 @@ export class GameManager {
         break;
       case GameState.DEBUG_GAME:
         this.drawDebugGame();
-        this.drawPauseButton(); // Affiche le bouton pause aussi en mode debug
         break;
       case GameState.PAUSED:
         this.drawPauseMenu();
@@ -419,6 +417,8 @@ export class GameManager {
       this.showFailureMessage();
       this.resetDebugGameAfterDelay();
     }
+
+    this.drawGameUI();
   }
 
   // Méthode utilitaire pour vérifier si la souris est sur un bouton
@@ -458,33 +458,6 @@ export class GameManager {
   // Quitter le mode debug pour revenir au menu
   private exitDebugMode(): void {
     this.gameState = GameState.MENU;
-  }
-
-  // Dessine le bouton de pause en bas à gauche
-  private drawPauseButton(): void {
-    // Position du bouton en bas à gauche
-    const btnX = 15;
-    const btnY = this.p.height - 45;
-    const btnSize = 30;
-
-    const isHovering = this.isMouseOverButton(btnX, btnY, btnSize, btnSize);
-
-    // Effet glassmorphism pour le bouton
-    this.p.drawingContext.shadowBlur = isHovering ? 10 : 5;
-    this.p.drawingContext.shadowColor = "rgba(0, 0, 0, 0.5)";
-
-    this.p.fill(isHovering ? 'rgba(100, 100, 100, 0.9)' : 'rgba(80, 80, 80, 0.7)');
-    this.p.stroke(255, 255, 255, isHovering ? 80 : 40);
-    this.p.strokeWeight(1);
-    this.p.rect(btnX, btnY, btnSize, btnSize, 8);
-
-    // Icône de pause (deux barres verticales)
-    this.p.noStroke();
-    this.p.fill(isHovering ? 255 : 230);
-    this.p.rect(btnX + 10, btnY + 8, 3, 14, 1);
-    this.p.rect(btnX + 17, btnY + 8, 3, 14, 1);
-
-    this.p.drawingContext.shadowBlur = 0;
   }
 
   // Affiche le menu de pause
