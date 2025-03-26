@@ -2,6 +2,7 @@ import p5 from "p5";
 import { MiniGame } from "../types/MiniGame";
 import { GameState } from "./GameState";
 import backgroundImg from "../assets/background.jpeg";
+import heartImg from "../assets/heart.png";
 
 export class GameManager {
   private currentGameIndex: number = 0;
@@ -19,12 +20,20 @@ export class GameManager {
   private debugItemHeight: number = 50;
   private visibleItems: number = 5; // Nombre d'éléments visibles à la fois
   private isDebugMode: boolean = false; // Nouvelle propriété pour le mode debug
+  private heartImage: p5.Image | null = null;
+  private lostLife: boolean = false;
+  private lostLifeCounter: number = 0;
 
   constructor(private p: p5, games: MiniGame[]) {
     this.games = games;
     // Chargement de l'image de fond
     this.p.loadImage(backgroundImg, (img) => {
       this.backgroundImage = img;
+    });
+
+    // Chargement de l'image de cœur
+    this.p.loadImage(heartImg, (img) => {
+      this.heartImage = img;
     });
   }
 
@@ -177,10 +186,27 @@ export class GameManager {
     this.p.text(`Time: ${Math.ceil(this.timer / 60)}`, 10, 20);
     this.p.text(`Score: ${this.score}`, this.p.width - 100, 20);
 
-    // Vies
-    this.p.fill(255, 0, 0);
-    for (let i = 0; i < this.lives; i++) {
-      this.p.circle(20 + i * 25, 40, 15);
+    // VIES AVEC IMAGES DE CŒUR STYLÉES
+    if (this.heartImage) {
+      for (let i = 0; i < this.lives; i++) {
+        // Effet de pulsation pour plus de dynamisme
+        const pulse = 1 + Math.sin(this.p.frameCount * 0.1) * 0.05;
+        const heartSize = 25 * pulse;
+
+        // Dessiner le cœur avec un léger effet de rotation
+        this.p.push();
+        this.p.imageMode(this.p.CENTER);
+        this.p.translate(25 + i * 35, 40);
+        this.p.rotate(Math.sin(this.p.frameCount * 0.05 + i) * 0.1);
+        this.p.image(this.heartImage, 0, 0, heartSize, heartSize);
+        this.p.pop();
+      }
+    } else {
+      // Fallback pathétique si l'image n'est pas chargée
+      this.p.fill(255, 0, 0);
+      for (let i = 0; i < this.lives; i++) {
+        this.p.circle(20 + i * 25, 40, 15);
+      }
     }
 
     // Vérifie si le mini-jeu est terminé (SUCCÈS)
@@ -191,23 +217,42 @@ export class GameManager {
 
     // Vérifie si le joueur a échoué (ÉCHEC)
     if ((this.games[this.currentGameIndex] as any).hasFailed?.()) {
-      this.lives--; // Perdre une vie
+      this.loseLife();
 
       if (this.lives <= 0) {
-        this.gameState = GameState.GAME_OVER; // Seulement quand on a épuisé toutes les vies
+        this.gameState = GameState.GAME_OVER;
       } else {
-        this.startTransition(); // Sinon on continue avec un nouveau jeu
+        this.startTransition();
       }
     }
 
     // Le temps est écoulé (TIME OUT)
     if (this.timer <= 0) {
-      this.lives--;
+      this.loseLife();
 
       if (this.lives <= 0) {
-        this.gameState = GameState.GAME_OVER; // Game over seulement quand plus de vies
+        this.gameState = GameState.GAME_OVER;
       } else {
-        this.startTransition(); // Sinon on continue avec un nouveau jeu
+        this.startTransition();
+      }
+    }
+
+    // DEBUG - Afficher l'état des jeux
+    if (this.isDebugMode) {
+      console.log(`Jeu actuel: ${this.currentGameIndex}`);
+      console.log(`Complété: ${this.games[this.currentGameIndex].isCompleted()}`);
+      console.log(`Échoué: ${(this.games[this.currentGameIndex] as any).hasFailed?.()}`);
+      console.log(`Timer: ${this.timer}`);
+    }
+
+    if (this.lostLife) {
+      // Flash rouge sur l'écran
+      this.p.fill(255, 0, 0, Math.sin(this.p.frameCount) * 50 + 50);
+      this.p.rect(0, 0, this.p.width, this.p.height);
+
+      this.lostLifeCounter--;
+      if (this.lostLifeCounter <= 0) {
+        this.lostLife = false;
       }
     }
 
@@ -844,5 +889,11 @@ export class GameManager {
     this.p.text(text, x + width / 2, y + height / 2);
 
     return mouseOver;
+  }
+
+  private loseLife(): void {
+    this.lostLife = true;
+    this.lostLifeCounter = 30; // Durée de l'effet
+    this.lives--;
   }
 }

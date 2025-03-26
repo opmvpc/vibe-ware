@@ -32,6 +32,7 @@ export class AvoidObstacleGame extends BaseMiniGame {
   private failed: boolean = false;
   private timer: number = 0;
   private VICTORY_TIME: number = 180; // ~3 secondes à 60fps
+  private gameProgress: number = 0;
 
   constructor(p: p5) {
     super(p);
@@ -269,7 +270,14 @@ export class AvoidObstacleGame extends BaseMiniGame {
     }
   }
 
+  isCompleted(): boolean {
+    // Le jeu est complété si le joueur a survécu assez longtemps
+    // OU si le van a atteint le bas de l'écran sans collision
+    return this.gameProgress >= 100 || this.vanY > this.p.height;
+  }
+
   hasFailed(): boolean {
+    // Le jeu échoue seulement en cas de collision
     return this.failed;
   }
 }
