@@ -257,6 +257,14 @@ export class GameManager {
 
   // Nouveau mode DEBUG pour les développeurs en herbe comme toi
   private drawDebugMenu(): void {
+    // SAUVEGARDER l'état graphique
+    this.p.push();
+
+    // FORCER les modes par défaut
+    this.p.imageMode(this.p.CORNER);
+    this.p.rectMode(this.p.CORNER);
+    this.p.textAlign(this.p.LEFT, this.p.BASELINE);
+
     // Fond
     this.p.background(20, 20, 40);
 
@@ -283,8 +291,6 @@ export class GameManager {
     this.p.stroke(255, 255, 255, 30);
     this.p.strokeWeight(1);
     this.p.rect(listX, listY, listWidth, listHeight, 10);
-
-    // Au lieu d'utiliser clip(), on va simplement ne pas dessiner les éléments en dehors du conteneur
 
     // Calculer le nombre d'éléments total
     const totalItems = this.games.length + 1; // +1 pour le bouton retour
@@ -336,8 +342,6 @@ export class GameManager {
       }
     }
 
-    // Pas besoin de réinitialiser le clipping puisqu'on ne l'utilise plus
-
     // Flèches de défilement
     if (this.debugMenuScroll > 0) {
       // Flèche vers le haut
@@ -348,6 +352,9 @@ export class GameManager {
       // Flèche vers le bas
       this.drawScrollArrow(listX + listWidth/2, listY + listHeight + 20, false);
     }
+
+    // RESTAURER l'état à la fin
+    this.p.pop();
   }
 
   private drawScrollArrow(x: number, y: number, pointingUp: boolean): void {

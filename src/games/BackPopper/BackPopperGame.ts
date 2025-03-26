@@ -145,8 +145,9 @@ export class BackPopperGame extends BaseMiniGame {
     }
   }
 
-  draw(): void {
+  drawGame(): void {
     // Fond
+    this.p.imageMode(this.p.CORNER);
     if (this.backgroundImage) {
       this.p.image(this.backgroundImage, 0, 0, this.p.width, this.p.height);
     } else {

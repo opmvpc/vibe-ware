@@ -90,53 +90,32 @@ export class FingerNoseGame extends BaseMiniGame {
     this.completed = false;
   }
 
-  draw(): void {
-    // Avec des images à fond noir, on utilise un fond noir aussi
+  drawGame(): void {
+    // Fond noir
     this.p.background(0);
 
-    // Si on a une image de visage, on la dessine
-    if (this.faceImg) {
-      this.p.image(this.faceImg, 0, 0, this.p.width, this.p.height);
-    } else {
-      // Sinon on dessine un arrière-plan sombre stylisé
-      this.p.fill(20, 20, 30);
-      this.p.rect(0, 0, this.p.width, this.p.height);
+    // CORRECTION: Toujours définir explicitement le mode d'image
+    this.p.imageMode(this.p.CENTER);
 
-      // Ajout d'un peu de texture
-      for (let i = 0; i < 50; i++) {
-        this.p.fill(
-          30 + this.p.random(20),
-          30 + this.p.random(20),
-          40 + this.p.random(20)
-        );
-        this.p.noStroke();
-        this.p.ellipse(
-          this.p.random(this.p.width),
-          this.p.random(this.p.height),
-          this.p.random(5, 10)
-        );
-      }
+    // Dessiner la tête
+    if (this.faceImg) {
+      // CORRECTION: Centrer la tête correctement
+      const headX = this.p.width / 2;
+      const headY = this.p.height / 3; // Positionnée au tiers supérieur
+
+      this.p.image(this.faceImg, headX, headY, this.p.width, this.p.height);
     }
 
-    // Dessine le nez
+    // Dessiner le nez
     if (this.noseImg) {
-      // Centre l'image sur les coordonnées
-      const noseWidth = 100;
-      const noseHeight = 100;
-      this.p.image(
-        this.noseImg,
-        this.noseX - noseWidth / 2,
-        this.noseY - noseHeight / 2,
-        noseWidth,
-        noseHeight
-      );
+      this.p.image(this.noseImg, this.noseX, this.noseY, 100, 100);
     } else {
       // Fallback pour le nez (plus sombre pour aller avec le thème noir)
       this.p.fill(150, 50, 50);
       this.p.ellipse(this.noseX, this.noseY, 60, 60);
     }
 
-    // Dessine le doigt qui suit la souris
+    // Dessiner le doigt
     this.fingerX = this.p.mouseX;
     this.fingerY = this.p.mouseY;
 
@@ -192,9 +171,9 @@ export class FingerNoseGame extends BaseMiniGame {
     }
 
     // Instructions
-    this.p.fill(255); // Texte blanc pour fond noir
-    this.p.textSize(24);
     this.p.textAlign(this.p.CENTER, this.p.CENTER);
+    this.p.fill(255);
+    this.p.textSize(24);
     this.p.text("METS TON DOIGT DANS LE NEZ!", this.p.width / 2, 30);
 
     // Texte de réussite

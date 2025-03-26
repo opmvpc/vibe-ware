@@ -85,8 +85,12 @@ export class LickFeetGame extends BaseMiniGame {
     this.completed = false;
   }
 
-  draw(): void {
+  drawGame(): void {
+    // SAUVEGARDER L'ÉTAT
+    this.p.push();
+
     // Fond
+    this.p.imageMode(this.p.CORNER);
     if (this.backgroundImage) {
       this.p.image(this.backgroundImage, 0, 0, this.p.width, this.p.height);
     } else {
@@ -160,6 +164,9 @@ export class LickFeetGame extends BaseMiniGame {
       this.p.textSize(32);
       this.p.text("BIEN LÉCHÉ!", this.p.width / 2, this.p.height / 2);
     }
+
+    // RESTAURER À LA FIN
+    this.p.pop();
   }
 
   private updateGameLogic(): void {

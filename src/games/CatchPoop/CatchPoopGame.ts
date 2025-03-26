@@ -112,9 +112,11 @@ export class CatchPoopGame extends BaseMiniGame {
     // Fond blanc
     this.p.background(255);
 
+    // DÉFINIR le mode d'image AU DÉBUT
+    this.p.imageMode(this.p.CENTER);
+
     // Assiette en background
     if (this.plateImage) {
-      this.p.imageMode(this.p.CENTER);
       this.p.image(
         this.plateImage,
         this.p.width / 2,
@@ -126,7 +128,6 @@ export class CatchPoopGame extends BaseMiniGame {
 
     // Dessiner le caca (notre cible)
     if (this.poopImage) {
-      this.p.imageMode(this.p.CENTER);
       this.p.image(
         this.poopImage,
         this.poopX,
@@ -154,7 +155,6 @@ export class CatchPoopGame extends BaseMiniGame {
     if (this.attemptMade) {
       // Si le joueur a réussi à attraper le caca, main avec caca
       if (this.completed && this.poopyHandImage) {
-        this.p.imageMode(this.p.CENTER);
         this.p.image(
           this.poopyHandImage,
           this.handStopX,
@@ -165,7 +165,6 @@ export class CatchPoopGame extends BaseMiniGame {
       }
       // Sinon main normale mais arrêtée
       else if (this.handImage) {
-        this.p.imageMode(this.p.CENTER);
         this.p.image(
           this.handImage,
           this.handStopX,
@@ -177,7 +176,6 @@ export class CatchPoopGame extends BaseMiniGame {
     }
     // Main normale en mouvement
     else if (this.handImage) {
-      this.p.imageMode(this.p.CENTER);
       this.p.image(
         this.handImage,
         this.handX,
@@ -200,6 +198,9 @@ export class CatchPoopGame extends BaseMiniGame {
         this.showFeedback--;
       }
     }
+
+    // RÉTABLIR le mode d'image PAR DÉFAUT à la fin
+    this.p.imageMode(this.p.CORNER);
 
     // Texte d'instructions
     this.p.fill(0);

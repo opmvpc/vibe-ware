@@ -46,4 +46,27 @@ export abstract class BaseMiniGame implements MiniGame {
   setDebugMode(debug: boolean): void {
     this.debugMode = debug;
   }
+
+  // Méthode pour sauvegarder et restaurer les paramètres graphiques
+  protected saveGraphicsState(): void {
+    this.p.push(); // Sauvegarde l'état actuel
+    // Définir les valeurs par défaut
+    this.p.imageMode(this.p.CORNER);
+    this.p.rectMode(this.p.CORNER);
+    this.p.textAlign(this.p.LEFT, this.p.BASELINE);
+  }
+
+  protected restoreGraphicsState(): void {
+    this.p.pop(); // Restaure l'état précédent
+  }
+
+  // Méthode que les sous-classes doivent implémenter
+  protected abstract drawGame(): void;
+
+  // Méthode finale qui GARANTIT que l'état est restauré
+  public draw(): void {
+    this.p.push();
+    this.drawGame();
+    this.p.pop();
+  }
 }
